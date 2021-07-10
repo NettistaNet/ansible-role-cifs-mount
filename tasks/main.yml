@@ -1,0 +1,38 @@
+---
+# tasks file for ansible-role-cifs-mount
+
+- name: Install packages
+  package:
+    name: "{{ packages }}"
+    state: present
+    update_cache: true
+  vars:
+    packages:
+    - cifs-utils
+
+- name: Generate credentials file
+  template:
+    src: cifs_credentials
+    dest: "/root/cifs_credentials"
+    owner: root
+    group: root
+    mode: 0600
+
+- name: Create mountpath
+  file:
+    dest: "{{ cifs_mountpath }}"
+    owner: root
+    group: root
+    state: directory
+    mode: 0700
+  tags:
+    - haproxy
+
+- name: Mount network share
+  mount:
+    src: "{{ cifs_location }}"
+    path: "{{ cifs_mountpath }}"
+    fstype: cifs
+    opts: 'credentials=/root/cifs_credentials'
+    state: mounted
+  become: true
